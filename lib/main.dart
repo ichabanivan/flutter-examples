@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import './screens/counter/counter.dart';
+import './screens/timer/timer.dart';
 
 // NOTE Public layout
 import './screens/public/screen.dart';
@@ -22,11 +23,12 @@ class App extends StatelessWidget {
     return MaterialApp(
       // Start the app with the "/" named route. In this case, the app starts
       // on the FirstScreen widget.
-      initialRoute: '/loader',
+      initialRoute: '/timer',
       routes: {
         '/loader': (context) => AppLoader(),
         '/maintenance': (context) => Maintenance(),
         '/counter': (context) => CounterScreen(),
+        '/timer': (context) => TimerScreen(),
         // When navigating to the "/" route, build the FirstScreen widget.
         ...publicRoutes(context),
         // When navigating to the "/second" route, build the SecondScreen widget.

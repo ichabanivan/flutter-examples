@@ -2,7 +2,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 enum CounterEvent { increment, decrement }
 
-// <Event, state>
+// Поскольку состояние нашего счетчика может быть представлено целым числом,
+// нам не нужно создавать собственный класс!
 class CounterBloc extends Bloc<CounterEvent, int> {
   @override
   int get initialState => 0;
