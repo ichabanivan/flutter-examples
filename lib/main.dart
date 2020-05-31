@@ -1,91 +1,69 @@
-import 'dart:async';
-
+import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
-import './screens/counter/counter.dart';
-import './screens/timer/timer.dart';
-import './screens/posts/posts.dart';
 
-// NOTE Public layout
-import './screens/public/screen.dart';
-import './screens/public/routes.dart';
+import './screens/authentication/authentication.dart';
+import './common/loader.dart';
+import './screens/home/home.dart';
+import './screens/signin/signin_screen.dart';
+import './repositories/repositories.dart';
 
-// NOTE Public layout
-import './screens/private/screen.dart';
-import './screens/private/routes.dart';
-import './screens/posts/bloc/simple_bloc_delegate.dart';
+class SimpleBlocDelegate extends BlocDelegate {
+  @override
+  void onEvent(Bloc bloc, Object event) {
+    print(event);
+    super.onEvent(bloc, event);
+  }
+
+  @override
+  void onTransition(Bloc bloc, Transition transition) {
+    print(transition);
+    super.onTransition(bloc, transition);
+  }
+
+  @override
+  void onError(Bloc bloc, Object error, StackTrace stackTrace) {
+    print(error);
+    super.onError(bloc, error, stackTrace);
+  }
+}
 
 void main() {
-  // Чтобы указать Bloc использовать наш SimpleBlocDelegate,
-  // нам просто нужно настроить нашу основную функцию.
   BlocSupervisor.delegate = SimpleBlocDelegate();
-  runApp(App());
+  final userRepository = UserRepository();
+  runApp(
+    BlocProvider<AuthenticationBloc>(
+      create: (context) {
+        return AuthenticationBloc(userRepository: userRepository)
+          ..add(AuthenticationStarted());
+      },
+      child: App(userRepository: userRepository),
+    ),
+  );
 }
 
 class App extends StatelessWidget {
+  final UserRepository userRepository;
+
+  App({Key key, @required this.userRepository}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // Start the app with the "/" named route. In this case, the app starts
-      // on the FirstScreen widget.
-      initialRoute: '/posts',
-      routes: {
-        '/loader': (context) => AppLoader(),
-        '/maintenance': (context) => Maintenance(),
-        '/counter': (context) => CounterScreen(),
-        '/timer': (context) => TimerScreen(),
-        '/posts': (context) => PostsScreen(),
-        // When navigating to the "/" route, build the FirstScreen widget.
-        ...publicRoutes(context),
-        // When navigating to the "/second" route, build the SecondScreen widget.
-        ...privateRoutes(context),
-      },
+      home: BlocBuilder<AuthenticationBloc, AuthenticationState>(
+        builder: (context, state) {
+          if (state is AuthenticationSuccess) {
+            return HomePage();
+          }
+          if (state is AuthenticationFailure) {
+            return LoginPage(userRepository: userRepository);
+          }
+          if (state is AuthenticationInProgress) {
+            return LoadingIndicator();
+          }
+          return LoadingIndicator();
+        },
+      ),
     );
-  }
-}
-
-class AppLoader extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
-    return Stack(
-      alignment: Alignment.center,
-      children: <Widget>[
-        Positioned(
-            top: 0,
-            bottom: 0,
-            child: Image.asset(
-              'assets/images/preloader.jpg',
-              fit: BoxFit.cover,
-              width: size.width,
-            )),
-        SizedBox(
-          width: 50,
-          height: 50,
-          child: CircularProgressIndicator(
-            valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),
-            strokeWidth: 5,
-          ),
-        )
-      ],
-    );
-  }
-}
-
-class Maintenance extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
-    return Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-        ),
-        child: Image.asset(
-          'assets/images/maintenance.gif',
-          fit: BoxFit.fitWidth,
-          width: size.width,
-        ));
   }
 }
